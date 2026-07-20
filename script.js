@@ -1,9 +1,9 @@
-// TODO(infra): pegar acá la URL del Google Apps Script Web App una vez publicado
-const UPLOAD_ENDPOINT = '';
-const CHUNK_SIZE = 8 * 1024 * 1024; // 8MB por tramo — sube en pedazos, sin techo de tamaño total
+const UPLOAD_ENDPOINT = 'https://upload.glowstudios.vip';
+const MAX_FILES = 3;
 
 const toggleBtn = document.getElementById('uploadToggle');
 const form = document.getElementById('uploadForm');
+const nameInput = document.getElementById('nameInput');
 const fileInput = document.getElementById('fileInput');
 const fileLabelText = document.getElementById('fileLabelText');
 const statusEl = document.getElementById('uploadStatus');
@@ -13,38 +13,56 @@ toggleBtn.addEventListener('click', () => {
   const willShow = form.hidden;
   form.hidden = !willShow;
   toggleBtn.setAttribute('aria-expanded', String(willShow));
-  if (willShow) fileInput.focus();
+  if (willShow) nameInput.focus();
 });
 
 fileInput.addEventListener('change', () => {
-  const file = fileInput.files[0];
-  fileLabelText.textContent = file ? file.name : 'Elegí un archivo de video';
+  const files = fileInput.files;
+  if (files.length > MAX_FILES) {
+    statusEl.textContent = `Solo podés subir hasta ${MAX_FILES} videos a la vez. Elegí menos archivos.`;
+    statusEl.className = 'upload-status upload-status--error';
+    fileInput.value = '';
+    fileLabelText.textContent = 'Elegí hasta 3 videos';
+    return;
+  }
+  statusEl.textContent = '';
+  statusEl.className = 'upload-status';
+  fileLabelText.textContent = files.length
+    ? `${files.length} video${files.length > 1 ? 's' : ''} elegido${files.length > 1 ? 's' : ''}`
+    : 'Elegí hasta 3 videos';
 });
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
-  const file = fileInput.files[0];
-  if (!file) return;
+  const files = fileInput.files;
+  const name = nameInput.value.trim();
+  if (!name || files.length === 0) return;
 
-  if (!UPLOAD_ENDPOINT) {
-    statusEl.textContent = 'La subida todavía no está activa. Volvé pronto.';
-    statusEl.className = 'upload-status upload-status--pending';
+  if (files.length > MAX_FILES) {
+    statusEl.textContent = `Solo podés subir hasta ${MAX_FILES} videos a la vez.`;
+    statusEl.className = 'upload-status upload-status--error';
     return;
   }
 
   submitBtn.disabled = true;
-  statusEl.textContent = 'Subiendo… 0%';
+  statusEl.textContent = 'Subiendo…';
   statusEl.className = 'upload-status';
 
   try {
-    await uploadInChunks(file, (pct) => {
-      statusEl.textContent = `Subiendo… ${pct}%`;
-    });
+    const formData = new FormData();
+    formData.append('name', name);
+    for (const file of files) {
+      formData.append('files', file);
+    }
+
+    const response = await fetch(UPLOAD_ENDPOINT, { method: 'POST', body: formData });
+    const result = await response.json();
+    if (!response.ok || !result.ok) throw new Error(result.error || 'upload failed');
 
     statusEl.textContent = '¡Listo! Gracias por compartir tu trabajo.';
     statusEl.className = 'upload-status upload-status--success';
     form.reset();
-    fileLabelText.textContent = 'Elegí un archivo de video';
+    fileLabelText.textContent = 'Elegí hasta 3 videos';
   } catch (err) {
     statusEl.textContent = 'Hubo un problema. Intentá de nuevo.';
     statusEl.className = 'upload-status upload-status--error';
@@ -52,41 +70,3 @@ form.addEventListener('submit', async (event) => {
     submitBtn.disabled = false;
   }
 });
-
-async function uploadInChunks(file, onProgress) {
-  const sessionId = (crypto.randomUUID && crypto.randomUUID()) || `${Date.now()}-${Math.random()}`;
-  let start = 0;
-  let chunkIndex = 0;
-
-  while (start < file.size) {
-    const end = Math.min(start + CHUNK_SIZE, file.size);
-    const chunkBase64 = await blobToBase64(file.slice(start, end));
-
-    const formData = new FormData();
-    formData.append('sessionId', sessionId);
-    formData.append('chunkIndex', String(chunkIndex));
-    formData.append('chunk', chunkBase64);
-    formData.append('filename', file.name);
-    formData.append('mimeType', file.type || 'video/mp4');
-    formData.append('totalSize', String(file.size));
-
-    const response = await fetch(UPLOAD_ENDPOINT, { method: 'POST', body: formData });
-    const result = await response.json();
-    if (!result.ok) throw new Error(result.error || 'falló un tramo de la subida');
-
-    start = end;
-    chunkIndex += 1;
-    onProgress(Math.min(100, Math.round((start / file.size) * 100)));
-
-    if (result.done) return;
-  }
-}
-
-function blobToBase64(blob) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result).split(',')[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-}

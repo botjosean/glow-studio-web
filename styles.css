@@ -139,6 +139,17 @@ a, button, input { font: inherit; }
 
 .upload-form[hidden] { display: none; }
 
+.name-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--ivory);
+  padding: 0.85rem 1rem;
+  font-size: 0.95rem;
+}
+
+.name-input::placeholder { color: var(--ivory-muted); }
+
 .file-label {
   display: flex;
   align-items: center;

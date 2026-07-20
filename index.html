@@ -32,9 +32,10 @@
       Compartir video
     </button>
     <form class="upload-form" id="uploadForm" hidden>
+      <input class="name-input" type="text" id="nameInput" name="name" placeholder="Tu nombre" autocomplete="name" required>
       <label class="file-label" for="fileInput">
-        <span id="fileLabelText">Elegí un archivo de video</span>
-        <input type="file" id="fileInput" name="file" accept="video/*" required>
+        <span id="fileLabelText">Elegí hasta 3 videos</span>
+        <input type="file" id="fileInput" name="files" accept="video/*" multiple required>
       </label>
       <button type="submit" class="btn-submit">Enviar</button>
       <p class="upload-status" id="uploadStatus" role="status" aria-live="polite"></p>
