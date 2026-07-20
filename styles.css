@@ -147,6 +147,8 @@ a, button, input { font: inherit; }
   text-align: left;
 }
 
+.field[hidden] { display: none; }
+
 .category-tabs {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
