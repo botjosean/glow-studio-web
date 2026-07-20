@@ -326,3 +326,40 @@ a, button, input { font: inherit; }
 @media (min-width: 640px) {
   .status-sub { font-size: 1.05rem; }
 }
+
+.fab-booking {
+  position: fixed;
+  right: max(1.1rem, env(safe-area-inset-right));
+  bottom: max(1.1rem, env(safe-area-inset-bottom));
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.25rem;
+  background: linear-gradient(180deg, var(--gold-soft), var(--gold));
+  color: var(--bg);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  border-radius: 999px;
+  box-shadow: 0 10px 28px -8px rgba(200, 164, 76, 0.55), 0 2px 8px rgba(0, 0, 0, 0.35);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.fab-booking:hover,
+.fab-booking:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px -8px rgba(200, 164, 76, 0.7), 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.fab-booking svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 380px) {
+  .fab-booking span { display: none; }
+  .fab-booking { padding: 0.85rem; }
+}
