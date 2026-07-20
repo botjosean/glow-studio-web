@@ -3,10 +3,17 @@ const MAX_FILES = 3;
 const BOOKING_API = 'https://citas.glowstudios.vip/api';
 const BOOKING_PROFILE_SLUG = 'glow-studios';
 
+const HAIR_MEMBER_SLUG = 'glow-studios-owner';
+const NAILS_MEMBER_SLUG = 'glow-nails';
+
 const bookingSection = document.getElementById('booking');
 const bookingToggle = document.getElementById('bookingToggle');
 const bookingForm = document.getElementById('bookingForm');
+const categoryTabs = document.getElementById('categoryTabs');
+const bothHint = document.getElementById('bothHint');
+const serviceField = document.getElementById('serviceField');
 const serviceSelect = document.getElementById('serviceSelect');
+const dateField = document.getElementById('dateField');
 const dateInput = document.getElementById('dateInput');
 const slotsField = document.getElementById('slotsField');
 const slotsGrid = document.getElementById('slotsGrid');
@@ -15,6 +22,7 @@ const bookingPhoneInput = document.getElementById('bookingPhoneInput');
 const bookingSubmitBtn = document.getElementById('bookingSubmitBtn');
 const bookingStatus = document.getElementById('bookingStatus');
 
+let servicesByCategory = null; // { hair: [...], nails: [...] }
 let servicesLoaded = false;
 let selectedSlot = null;
 
@@ -37,25 +45,48 @@ bookingToggle.addEventListener('click', () => {
 });
 
 async function loadServices() {
-  serviceSelect.disabled = true;
   try {
     const response = await fetch(`${BOOKING_API}/profiles/${BOOKING_PROFILE_SLUG}`);
     if (!response.ok) throw new Error('no se pudo cargar');
     const data = await response.json();
-    for (const service of data.services) {
-      const option = document.createElement('option');
-      option.value = service.id;
-      option.textContent = `${service.name} — $${Number(service.price).toFixed(0)}`;
-      serviceSelect.appendChild(option);
-    }
+    const hairMember = data.team.find((member) => member.slug === HAIR_MEMBER_SLUG);
+    const nailsMember = data.team.find((member) => member.slug === NAILS_MEMBER_SLUG);
+    servicesByCategory = {
+      hair: hairMember ? hairMember.services : [],
+      nails: nailsMember ? nailsMember.services : [],
+    };
     servicesLoaded = true;
   } catch (err) {
     bookingStatus.textContent = 'No se pudieron cargar los servicios. Intentá de nuevo más tarde.';
     bookingStatus.className = 'upload-status upload-status--error';
-  } finally {
-    serviceSelect.disabled = false;
   }
 }
+
+categoryTabs.addEventListener('click', (event) => {
+  const tab = event.target.closest('.category-tab');
+  if (!tab || !servicesByCategory) return;
+
+  for (const el of categoryTabs.querySelectorAll('.category-tab')) el.classList.remove('selected');
+  tab.classList.add('selected');
+
+  const category = tab.dataset.category;
+  bothHint.hidden = category !== 'both';
+  const services = category === 'hair' ? servicesByCategory.hair : servicesByCategory.nails;
+
+  serviceSelect.innerHTML = '<option value="" disabled selected>Elegí un servicio</option>';
+  for (const service of services) {
+    const option = document.createElement('option');
+    option.value = service.id;
+    option.textContent = `${service.name} — $${Number(service.price).toFixed(0)}`;
+    serviceSelect.appendChild(option);
+  }
+
+  serviceField.hidden = false;
+  dateField.hidden = false;
+  slotsField.hidden = true;
+  selectedSlot = null;
+  updateBookingSubmitState();
+});
 
 async function loadSlots() {
   const serviceId = serviceSelect.value;

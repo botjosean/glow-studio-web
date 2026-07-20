@@ -147,6 +147,32 @@ a, button, input { font: inherit; }
   text-align: left;
 }
 
+.category-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.category-tab {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--ivory-muted);
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: 0.7rem 0.4rem;
+  cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease, background-color 150ms ease;
+}
+
+.category-tab:hover { border-color: var(--gold); color: var(--gold-soft); }
+
+.category-tab.selected {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--bg);
+  font-weight: 600;
+}
+
 .field-label {
   font-size: 0.72rem;
   letter-spacing: 0.1em;

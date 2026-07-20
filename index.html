@@ -45,13 +45,23 @@
     </button>
     <form class="upload-form" id="bookingForm" hidden novalidate>
       <div class="field">
+        <label class="field-label">¿Qué querés reservar?</label>
+        <div class="category-tabs" id="categoryTabs" role="group">
+          <button type="button" class="category-tab" data-category="hair">Peluquería</button>
+          <button type="button" class="category-tab" data-category="nails">Uñas</button>
+          <button type="button" class="category-tab" data-category="both">Ambos</button>
+        </div>
+        <p class="field-hint" id="bothHint" hidden>Reservamos tu turno de uñas y coordinamos el de peluquería cuando te confirmemos por teléfono.</p>
+      </div>
+
+      <div class="field" id="serviceField" hidden>
         <label class="field-label" for="serviceSelect">Servicio</label>
         <select class="select-input" id="serviceSelect" required>
           <option value="" disabled selected>Elegí un servicio</option>
         </select>
       </div>
 
-      <div class="field">
+      <div class="field" id="dateField" hidden>
         <label class="field-label" for="dateInput">Día</label>
         <input class="name-input" type="date" id="dateInput" required>
       </div>
