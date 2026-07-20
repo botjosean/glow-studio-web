@@ -67,10 +67,11 @@ a, button, input { font: inherit; }
 
 .tagline {
   margin: 0;
-  font-size: clamp(0.95rem, 3vw, 1.1rem);
-  letter-spacing: 0.22em;
+  font-size: clamp(0.85rem, 2.6vw, 1.1rem);
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--ivory);
+  text-wrap: balance;
 }
 
 .location {
