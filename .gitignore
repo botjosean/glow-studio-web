@@ -1,0 +1,11 @@
+# Videos de referencia del cliente — no son parte del sitio
+*.mp4
+*.MP4
+*.mov
+*.MOV
+
+# Proyecto aparte (sistema de citas Estilo Look) — tiene .env y una llave SSH,
+# nunca debe entrar al repo público de Glow Studio
+citas/
+
+.DS_Store
