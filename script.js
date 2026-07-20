@@ -23,7 +23,7 @@ const bookingSubmitBtn = document.getElementById('bookingSubmitBtn');
 const bookingStatus = document.getElementById('bookingStatus');
 
 let servicesByCategory = null; // { hair: [...], nails: [...] }
-let servicesLoaded = false;
+let loadServicesPromise = null;
 let selectedSlot = null;
 
 const today = new Date();
@@ -40,31 +40,40 @@ bookingToggle.addEventListener('click', () => {
     setTimeout(() => {
       bookingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 50);
-    if (!servicesLoaded) loadServices();
+    if (!loadServicesPromise) loadServicesPromise = loadServices();
+    loadServicesPromise.catch(() => {}); // avoid an unhandled-rejection warning if no tab is tapped yet
   }
 });
 
 async function loadServices() {
-  try {
-    const response = await fetch(`${BOOKING_API}/profiles/${BOOKING_PROFILE_SLUG}`);
-    if (!response.ok) throw new Error('no se pudo cargar');
-    const data = await response.json();
-    const hairMember = data.team.find((member) => member.slug === HAIR_MEMBER_SLUG);
-    const nailsMember = data.team.find((member) => member.slug === NAILS_MEMBER_SLUG);
-    servicesByCategory = {
-      hair: hairMember ? hairMember.services : [],
-      nails: nailsMember ? nailsMember.services : [],
-    };
-    servicesLoaded = true;
-  } catch (err) {
-    bookingStatus.textContent = 'No se pudieron cargar los servicios. Intentá de nuevo más tarde.';
-    bookingStatus.className = 'upload-status upload-status--error';
-  }
+  const response = await fetch(`${BOOKING_API}/profiles/${BOOKING_PROFILE_SLUG}`);
+  if (!response.ok) throw new Error('no se pudo cargar');
+  const data = await response.json();
+  const hairMember = data.team.find((member) => member.slug === HAIR_MEMBER_SLUG);
+  const nailsMember = data.team.find((member) => member.slug === NAILS_MEMBER_SLUG);
+  servicesByCategory = {
+    hair: hairMember ? hairMember.services : [],
+    nails: nailsMember ? nailsMember.services : [],
+  };
 }
 
-categoryTabs.addEventListener('click', (event) => {
+categoryTabs.addEventListener('click', async (event) => {
   const tab = event.target.closest('.category-tab');
-  if (!tab || !servicesByCategory) return;
+  if (!tab) return;
+
+  if (!servicesByCategory) {
+    bookingStatus.textContent = 'Cargando servicios…';
+    bookingStatus.className = 'upload-status';
+    try {
+      await (loadServicesPromise || (loadServicesPromise = loadServices()));
+    } catch (err) {
+      bookingStatus.textContent = 'No se pudieron cargar los servicios. Intentá de nuevo más tarde.';
+      bookingStatus.className = 'upload-status upload-status--error';
+      return;
+    }
+    bookingStatus.textContent = '';
+    bookingStatus.className = 'upload-status';
+  }
 
   for (const el of categoryTabs.querySelectorAll('.category-tab')) el.classList.remove('selected');
   tab.classList.add('selected');
