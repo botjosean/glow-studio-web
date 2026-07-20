@@ -25,6 +25,7 @@ const bookingStatus = document.getElementById('bookingStatus');
 let servicesByCategory = null; // { hair: [...], nails: [...] }
 let loadServicesPromise = null;
 let selectedSlot = null;
+const serviceMemberMap = new Map(); // serviceId -> memberId, needed by POST /bookings
 
 const today = new Date();
 dateInput.min = today.toISOString().slice(0, 10);
@@ -88,6 +89,7 @@ categoryTabs.addEventListener('click', async (event) => {
     option.value = service.id;
     option.textContent = `${service.name} — $${Number(service.price).toFixed(0)}`;
     serviceSelect.appendChild(option);
+    serviceMemberMap.set(service.id, service.memberId);
   }
 
   serviceField.hidden = false;
@@ -182,6 +184,7 @@ bookingForm.addEventListener('submit', async (event) => {
       body: JSON.stringify({
         profileSlug: BOOKING_PROFILE_SLUG,
         serviceId: serviceSelect.value,
+        memberId: serviceMemberMap.get(serviceSelect.value),
         appointmentAt: selectedSlot.appointmentAt,
         clientName: bookingNameInput.value.trim(),
         clientPhone: normalizePhoneE164(bookingPhoneInput.value),
