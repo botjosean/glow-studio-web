@@ -39,6 +39,43 @@
     <p class="status-sub">Estamos preparando algo especial. Mientras tanto, compartí fotos o videos de tu trabajo con nosotras.</p>
   </section>
 
+  <section class="upload" id="booking">
+    <button class="btn-upload" id="bookingToggle" type="button" aria-expanded="false" aria-controls="bookingForm">
+      Reservar cita
+    </button>
+    <form class="upload-form" id="bookingForm" hidden novalidate>
+      <div class="field">
+        <label class="field-label" for="serviceSelect">Servicio</label>
+        <select class="select-input" id="serviceSelect" required>
+          <option value="" disabled selected>Elegí un servicio</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="dateInput">Día</label>
+        <input class="name-input" type="date" id="dateInput" required>
+      </div>
+
+      <div class="field" id="slotsField" hidden>
+        <label class="field-label">Hora</label>
+        <div class="slots-grid" id="slotsGrid"></div>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="bookingNameInput">Tu nombre</label>
+        <input class="name-input" type="text" id="bookingNameInput" placeholder="Ej: Ana" autocomplete="name" required>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="bookingPhoneInput">Tu teléfono</label>
+        <input class="name-input" type="tel" id="bookingPhoneInput" placeholder="404 555 0123" autocomplete="tel" required>
+      </div>
+
+      <button type="submit" class="btn-submit" id="bookingSubmitBtn" disabled>Confirmar cita</button>
+      <p class="upload-status" id="bookingStatus" role="status" aria-live="polite"></p>
+    </form>
+  </section>
+
   <section class="upload" id="upload">
     <button class="btn-upload" id="uploadToggle" type="button" aria-expanded="false" aria-controls="uploadForm">
       Compartir fotos y videos
@@ -97,16 +134,6 @@
   </footer>
 
 </main>
-
-<a class="fab-booking" href="https://citas.glowstudios.vip" target="_blank" rel="noopener noreferrer" aria-label="Reservar cita">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-    <rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/>
-    <path d="M3.5 9.5h17" stroke-linecap="round"/>
-    <path d="M8 2.5v4M16 2.5v4" stroke-linecap="round"/>
-    <path d="M8 13.5h2M8 17h2M14 13.5h2M14 17h2" stroke-linecap="round"/>
-  </svg>
-  <span>Reservar cita</span>
-</a>
 
 <script src="script.js"></script>
 </body>

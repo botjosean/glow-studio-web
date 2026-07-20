@@ -1,5 +1,168 @@
 const UPLOAD_ENDPOINT = 'https://upload.glowstudios.vip';
 const MAX_FILES = 3;
+const BOOKING_API = 'https://citas.glowstudios.vip/api';
+const BOOKING_PROFILE_SLUG = 'glow-studios';
+
+const bookingSection = document.getElementById('booking');
+const bookingToggle = document.getElementById('bookingToggle');
+const bookingForm = document.getElementById('bookingForm');
+const serviceSelect = document.getElementById('serviceSelect');
+const dateInput = document.getElementById('dateInput');
+const slotsField = document.getElementById('slotsField');
+const slotsGrid = document.getElementById('slotsGrid');
+const bookingNameInput = document.getElementById('bookingNameInput');
+const bookingPhoneInput = document.getElementById('bookingPhoneInput');
+const bookingSubmitBtn = document.getElementById('bookingSubmitBtn');
+const bookingStatus = document.getElementById('bookingStatus');
+
+let servicesLoaded = false;
+let selectedSlot = null;
+
+const today = new Date();
+dateInput.min = today.toISOString().slice(0, 10);
+const maxBookingDate = new Date(today);
+maxBookingDate.setDate(maxBookingDate.getDate() + 30);
+dateInput.max = maxBookingDate.toISOString().slice(0, 10);
+
+bookingToggle.addEventListener('click', () => {
+  const willShow = bookingForm.hidden;
+  bookingForm.hidden = !willShow;
+  bookingToggle.setAttribute('aria-expanded', String(willShow));
+  if (willShow) {
+    setTimeout(() => {
+      bookingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+    if (!servicesLoaded) loadServices();
+  }
+});
+
+async function loadServices() {
+  serviceSelect.disabled = true;
+  try {
+    const response = await fetch(`${BOOKING_API}/profiles/${BOOKING_PROFILE_SLUG}`);
+    if (!response.ok) throw new Error('no se pudo cargar');
+    const data = await response.json();
+    for (const service of data.services) {
+      const option = document.createElement('option');
+      option.value = service.id;
+      option.textContent = `${service.name} — $${Number(service.price).toFixed(0)}`;
+      serviceSelect.appendChild(option);
+    }
+    servicesLoaded = true;
+  } catch (err) {
+    bookingStatus.textContent = 'No se pudieron cargar los servicios. Intentá de nuevo más tarde.';
+    bookingStatus.className = 'upload-status upload-status--error';
+  } finally {
+    serviceSelect.disabled = false;
+  }
+}
+
+async function loadSlots() {
+  const serviceId = serviceSelect.value;
+  const date = dateInput.value;
+  selectedSlot = null;
+  updateBookingSubmitState();
+
+  if (!serviceId || !date) {
+    slotsField.hidden = true;
+    return;
+  }
+
+  slotsField.hidden = false;
+  slotsGrid.innerHTML = '<p class="slots-empty">Buscando horarios…</p>';
+
+  try {
+    const url = `${BOOKING_API}/availability?profileSlug=${BOOKING_PROFILE_SLUG}&serviceId=${serviceId}&date=${date}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('fail');
+    const data = await response.json();
+    renderSlots(data.slots || []);
+  } catch (err) {
+    slotsGrid.innerHTML = '<p class="slots-empty">No se pudo cargar la disponibilidad.</p>';
+  }
+}
+
+function renderSlots(slots) {
+  slotsGrid.innerHTML = '';
+  if (slots.length === 0) {
+    slotsGrid.innerHTML = '<p class="slots-empty">No hay horarios disponibles ese día.</p>';
+    return;
+  }
+  for (const slot of slots) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'slot-btn';
+    btn.textContent = slot.label;
+    btn.addEventListener('click', () => {
+      selectedSlot = slot;
+      for (const el of slotsGrid.querySelectorAll('.slot-btn')) el.classList.remove('selected');
+      btn.classList.add('selected');
+      updateBookingSubmitState();
+    });
+    slotsGrid.appendChild(btn);
+  }
+}
+
+serviceSelect.addEventListener('change', loadSlots);
+dateInput.addEventListener('change', loadSlots);
+
+function updateBookingSubmitState() {
+  const hasName = bookingNameInput.value.trim().length > 0;
+  const hasPhone = bookingPhoneInput.value.trim().length > 0;
+  bookingSubmitBtn.disabled = !(serviceSelect.value && selectedSlot && hasName && hasPhone);
+}
+
+bookingNameInput.addEventListener('input', updateBookingSubmitState);
+bookingPhoneInput.addEventListener('input', updateBookingSubmitState);
+
+function normalizePhoneE164(raw) {
+  const trimmed = raw.trim();
+  const digits = trimmed.replace(/\D/g, '');
+  if (trimmed.startsWith('+')) return `+${digits}`;
+  if (digits.length === 10) return `+1${digits}`;
+  return `+${digits}`;
+}
+
+bookingForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!selectedSlot || !serviceSelect.value) return;
+
+  bookingSubmitBtn.disabled = true;
+  bookingStatus.textContent = 'Confirmando…';
+  bookingStatus.className = 'upload-status';
+
+  try {
+    const idempotencyKey = (crypto.randomUUID && crypto.randomUUID()) || `${Date.now()}-${Math.random()}`;
+    const response = await fetch(`${BOOKING_API}/bookings`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'idempotency-key': idempotencyKey,
+      },
+      body: JSON.stringify({
+        profileSlug: BOOKING_PROFILE_SLUG,
+        serviceId: serviceSelect.value,
+        appointmentAt: selectedSlot.appointmentAt,
+        clientName: bookingNameInput.value.trim(),
+        clientPhone: normalizePhoneE164(bookingPhoneInput.value),
+      }),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || 'no se pudo reservar');
+
+    bookingStatus.textContent = `✓ ¡Listo! Tu cita para ${result.dayLabel} a las ${result.timeLabel} quedó reservada. Te confirmamos por teléfono.`;
+    bookingStatus.className = 'upload-status upload-status--success';
+    bookingForm.reset();
+    slotsField.hidden = true;
+    slotsGrid.innerHTML = '';
+    selectedSlot = null;
+  } catch (err) {
+    bookingStatus.textContent = 'Ese horario ya no está disponible. Probá con otro.';
+    bookingStatus.className = 'upload-status upload-status--error';
+  } finally {
+    updateBookingSubmitState();
+  }
+});
 
 const uploadSection = document.getElementById('upload');
 const toggleBtn = document.getElementById('uploadToggle');
