@@ -84,6 +84,29 @@
       <button type="submit" class="btn-submit" id="bookingSubmitBtn" disabled>Confirmar cita</button>
       <p class="upload-status" id="bookingStatus" role="status" aria-live="polite"></p>
     </form>
+
+    <div class="confirmation" id="bookingConfirmation" hidden role="status" aria-live="polite">
+      <svg class="confirmation-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M7.5 12.5l3 3 6-6.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <p class="confirmation-title">¡Cita reservada!</p>
+      <dl class="confirmation-details">
+        <div>
+          <dt>Servicio</dt>
+          <dd id="confirmService"></dd>
+        </div>
+        <div>
+          <dt>Día</dt>
+          <dd id="confirmDay"></dd>
+        </div>
+        <div>
+          <dt>Hora</dt>
+          <dd id="confirmTime"></dd>
+        </div>
+      </dl>
+      <p class="confirmation-note">Te confirmamos por teléfono.</p>
+    </div>
   </section>
 
   <section class="upload" id="upload">

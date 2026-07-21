@@ -21,6 +21,10 @@ const bookingNameInput = document.getElementById('bookingNameInput');
 const bookingPhoneInput = document.getElementById('bookingPhoneInput');
 const bookingSubmitBtn = document.getElementById('bookingSubmitBtn');
 const bookingStatus = document.getElementById('bookingStatus');
+const bookingConfirmation = document.getElementById('bookingConfirmation');
+const confirmService = document.getElementById('confirmService');
+const confirmDay = document.getElementById('confirmDay');
+const confirmTime = document.getElementById('confirmTime');
 
 let servicesByCategory = null; // { hair: [...], nails: [...] }
 let loadServicesPromise = null;
@@ -33,11 +37,18 @@ const maxBookingDate = new Date(today);
 maxBookingDate.setDate(maxBookingDate.getDate() + 30);
 dateInput.max = maxBookingDate.toISOString().slice(0, 10);
 
+let confirmationTimeoutId = null;
+
 bookingToggle.addEventListener('click', () => {
   const willShow = bookingForm.hidden;
   bookingForm.hidden = !willShow;
   bookingToggle.setAttribute('aria-expanded', String(willShow));
   if (willShow) {
+    if (confirmationTimeoutId) {
+      clearTimeout(confirmationTimeoutId);
+      confirmationTimeoutId = null;
+    }
+    bookingConfirmation.hidden = true;
     setTimeout(() => {
       bookingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 50);
@@ -174,6 +185,7 @@ bookingForm.addEventListener('submit', async (event) => {
   bookingStatus.className = 'upload-status';
 
   try {
+    const chosenServiceLabel = serviceSelect.options[serviceSelect.selectedIndex].textContent;
     const idempotencyKey = (crypto.randomUUID && crypto.randomUUID()) || `${Date.now()}-${Math.random()}`;
     const response = await fetch(`${BOOKING_API}/bookings`, {
       method: 'POST',
@@ -193,19 +205,44 @@ bookingForm.addEventListener('submit', async (event) => {
     const result = await response.json();
     if (!response.ok) throw new Error(result.message || 'no se pudo reservar');
 
-    bookingStatus.textContent = `✓ ¡Listo! Tu cita para ${result.dayLabel} a las ${result.timeLabel} quedó reservada. Te confirmamos por teléfono.`;
-    bookingStatus.className = 'upload-status upload-status--success';
-    bookingForm.reset();
-    slotsField.hidden = true;
-    slotsGrid.innerHTML = '';
-    selectedSlot = null;
+    showBookingConfirmation({
+      service: chosenServiceLabel,
+      day: result.dayLabel,
+      time: result.timeLabel,
+    });
   } catch (err) {
     bookingStatus.textContent = 'Ese horario ya no está disponible. Probá con otro.';
     bookingStatus.className = 'upload-status upload-status--error';
-  } finally {
     updateBookingSubmitState();
   }
 });
+
+function showBookingConfirmation({ service, day, time }) {
+  confirmService.textContent = service;
+  confirmDay.textContent = day;
+  confirmTime.textContent = time;
+
+  bookingForm.hidden = true;
+  bookingConfirmation.hidden = false;
+
+  confirmationTimeoutId = setTimeout(() => {
+    confirmationTimeoutId = null;
+    bookingConfirmation.hidden = true;
+    bookingForm.reset();
+    for (const el of categoryTabs.querySelectorAll('.category-tab')) el.classList.remove('selected');
+    bothHint.hidden = true;
+    serviceField.hidden = true;
+    dateField.hidden = true;
+    slotsField.hidden = true;
+    slotsGrid.innerHTML = '';
+    selectedSlot = null;
+    bookingStatus.textContent = '';
+    bookingStatus.className = 'upload-status';
+    updateBookingSubmitState();
+    bookingToggle.setAttribute('aria-expanded', 'false');
+    bookingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 4500);
+}
 
 const uploadSection = document.getElementById('upload');
 const toggleBtn = document.getElementById('uploadToggle');

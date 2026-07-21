@@ -412,3 +412,70 @@ input[type="date"].name-input {
   text-align: center;
   padding: 0.5rem 0;
 }
+
+.confirmation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  animation: confirmation-in 300ms ease;
+}
+
+.confirmation[hidden] { display: none; }
+
+@keyframes confirmation-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+.confirmation-check {
+  width: 44px;
+  height: 44px;
+  color: #9fd8a0;
+}
+
+.confirmation-title {
+  margin: 0;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.3rem;
+  color: var(--gold-soft);
+}
+
+.confirmation-details {
+  margin: 0.4rem 0 0;
+  width: 100%;
+  max-width: 20rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.confirmation-details > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.confirmation-details dt {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ivory-muted);
+}
+
+.confirmation-details dd {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--ivory);
+  text-align: right;
+}
+
+.confirmation-note {
+  margin: 0.3rem 0 0;
+  font-size: 0.85rem;
+  color: var(--ivory-muted);
+}
