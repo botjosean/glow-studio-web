@@ -306,6 +306,11 @@ fileInput.addEventListener('change', () => {
   updateSubmitState();
 });
 
+// Cloudflare corta cualquier request de más de 100MB con un 413 antes de que llegue
+// al servidor — los videos de celular reales superan eso fácil, así que se suben en
+// pedazos de CHUNK_SIZE (muy por debajo del límite) y se re-arman del otro lado.
+const CHUNK_SIZE = 20 * 1024 * 1024;
+
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   const files = fileInput.files;
@@ -319,15 +324,9 @@ form.addEventListener('submit', async (event) => {
   progressFill.style.width = '0%';
 
   try {
-    const formData = new FormData();
-    formData.append('name', name);
-    for (const file of files) {
-      formData.append('files', file);
-    }
-
-    await uploadWithProgress(UPLOAD_ENDPOINT, formData, (pct) => {
+    await uploadFilesChunked(files, name, (pct, label) => {
       progressFill.style.width = `${pct}%`;
-      statusEl.textContent = `Subiendo… ${pct}%`;
+      statusEl.textContent = label || `Subiendo… ${pct}%`;
     });
 
     progressFill.style.width = '100%';
@@ -337,7 +336,7 @@ form.addEventListener('submit', async (event) => {
     fileDrop.classList.remove('has-files');
     fileLabelText.textContent = 'Tocá para elegir';
   } catch (err) {
-    statusEl.textContent = 'No se pudo subir. Revisá tu conexión e intentá de nuevo.';
+    statusEl.textContent = friendlyUploadError(err);
     statusEl.className = 'upload-status upload-status--error';
   } finally {
     updateSubmitState();
@@ -347,23 +346,81 @@ form.addEventListener('submit', async (event) => {
   }
 });
 
-function uploadWithProgress(url, formData, onProgress) {
+function friendlyUploadError(err) {
+  const knownServerMessages = new Set([
+    'solo se aceptan fotos o videos',
+    'no se pudo verificar la seguridad del archivo',
+    'demasiados intentos, esperá un momento',
+    'falta el nombre o los archivos',
+  ]);
+  const message = err && err.message;
+  if (knownServerMessages.has(message)) {
+    return message.charAt(0).toUpperCase() + message.slice(1) + '.';
+  }
+  if (message === 'archivo_pesado') {
+    return 'Ese archivo es demasiado pesado. Probá con uno más liviano.';
+  }
+  return 'No se pudo subir. Revisá tu conexión e intentá de nuevo.';
+}
+
+async function uploadFilesChunked(files, name, onProgress) {
+  const uploadId = (crypto.randomUUID && crypto.randomUUID()) || `${Date.now()}-${Math.random()}`;
+  const totalBytes = Array.from(files).reduce((sum, file) => sum + file.size, 0) || 1;
+  let completedBytes = 0;
+  const manifest = [];
+
+  for (let fileIndex = 0; fileIndex < files.length; fileIndex += 1) {
+    const file = files[fileIndex];
+    manifest.push({ fileIndex, fileName: file.name });
+
+    const totalChunks = Math.max(1, Math.ceil(file.size / CHUNK_SIZE));
+    for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex += 1) {
+      const start = chunkIndex * CHUNK_SIZE;
+      const blob = file.slice(start, start + CHUNK_SIZE);
+
+      const chunkForm = new FormData();
+      chunkForm.append('uploadId', uploadId);
+      chunkForm.append('fileIndex', String(fileIndex));
+      chunkForm.append('chunkIndex', String(chunkIndex));
+      chunkForm.append('chunk', blob, file.name);
+
+      await xhrRequest(`${UPLOAD_ENDPOINT}/chunk`, chunkForm, (loaded) => {
+        const pct = Math.min(99, Math.round(((completedBytes + loaded) / totalBytes) * 100));
+        onProgress(pct, `Subiendo… ${pct}%`);
+      });
+
+      completedBytes += blob.size;
+      const pct = Math.min(99, Math.round((completedBytes / totalBytes) * 100));
+      onProgress(pct, `Subiendo… ${pct}%`);
+    }
+  }
+
+  onProgress(99, 'Verificando…');
+
+  const finishForm = new FormData();
+  finishForm.append('uploadId', uploadId);
+  finishForm.append('name', name);
+  finishForm.append('files', JSON.stringify(manifest));
+  await xhrRequest(`${UPLOAD_ENDPOINT}/finish`, finishForm);
+}
+
+function xhrRequest(url, formData, onProgress) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', url);
 
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable) {
-        onProgress(Math.round((event.loaded / event.total) * 100));
-      }
-    };
+    if (onProgress) {
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) onProgress(event.loaded);
+      };
+    }
 
     xhr.onload = () => {
       let result;
       try {
         result = JSON.parse(xhr.responseText);
       } catch (err) {
-        reject(new Error('respuesta inválida'));
+        reject(new Error(xhr.status === 413 ? 'archivo_pesado' : 'respuesta inválida'));
         return;
       }
       if (xhr.status >= 200 && xhr.status < 300 && result.ok) {
