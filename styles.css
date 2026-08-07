@@ -111,24 +111,34 @@ a, button, input { font: inherit; }
   gap: 1rem;
 }
 
+/* Secundario a propósito: reservar es la acción que el negocio quiere, y tres
+   botones dorados idénticos en la misma pantalla no dejan ver cuál importa.
+   Subir fotos sigue siendo evidente, pero deja de competir con las tarjetas. */
 .btn-upload {
   font-size: 1rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--bg);
-  background: linear-gradient(180deg, var(--gold-soft), var(--gold));
-  border: none;
+  color: var(--gold-soft);
+  background: transparent;
+  border: 1px solid var(--border);
+  min-height: 3rem;
   padding: 0.9rem 2.25rem;
   border-radius: var(--radius);
   cursor: pointer;
-  transition: transform 150ms ease, box-shadow 150ms ease;
-  box-shadow: 0 8px 24px -12px rgba(200, 164, 76, 0.55);
+  transition: border-color 150ms ease, color 150ms ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.btn-upload:hover,
+@media (hover: hover) {
+  .btn-upload:hover {
+    border-color: var(--gold);
+    color: var(--ivory);
+  }
+}
+
 .btn-upload:focus-visible {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 28px -12px rgba(200, 164, 76, 0.7);
+  border-color: var(--gold);
+  color: var(--ivory);
 }
 
 .upload-form {
@@ -148,32 +158,6 @@ a, button, input { font: inherit; }
 }
 
 .field[hidden] { display: none; }
-
-.category-tabs {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
-}
-
-.category-tab {
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--ivory-muted);
-  font-family: inherit;
-  font-size: 0.85rem;
-  padding: 0.7rem 0.4rem;
-  cursor: pointer;
-  transition: border-color 150ms ease, color 150ms ease, background-color 150ms ease;
-}
-
-.category-tab:hover { border-color: var(--gold); color: var(--gold-soft); }
-
-.category-tab.selected {
-  background: var(--gold);
-  border-color: var(--gold);
-  color: var(--bg);
-  font-weight: 600;
-}
 
 .field-label {
   font-size: 0.72rem;
@@ -286,6 +270,14 @@ a, button, input { font: inherit; }
   cursor: not-allowed;
 }
 
+.upload-hint {
+  min-height: 1.1em;
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--gold-soft);
+  text-align: center;
+}
+
 .upload-status {
   min-height: 1.2em;
   margin: 0;
@@ -355,127 +347,137 @@ a, button, input { font: inherit; }
   .status-sub { font-size: 1.05rem; }
 }
 
-.select-input {
+/* Tarjetas de profesionales — cada una lleva a su página real en la app de
+   citas. Pensadas para el pulgar primero: se apilan siempre (la página mide
+   30rem como máximo), el botón ocupa el ancho completo y nunca depende de
+   hover, que en un teléfono no existe. */
+
+.booking {
   width: 100%;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--ivory);
-  padding: 0.85rem 1rem;
-  font-size: 1rem;
-  font-family: inherit;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a8a29a' stroke-width='1.5'%3E%3Cpath d='M6 9l6 6 6-6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 1rem center;
-  background-size: 18px;
-  transition: border-color 150ms ease;
-}
-
-.select-input:focus-visible { border-color: var(--gold); outline: none; }
-.select-input option { background: var(--bg); color: var(--ivory); }
-
-input[type="date"].name-input {
-  color-scheme: dark;
-}
-
-.slots-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
-}
-
-.slot-btn {
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--ivory-muted);
-  font-family: inherit;
-  font-size: 0.85rem;
-  padding: 0.6rem 0.4rem;
-  cursor: pointer;
-  transition: border-color 150ms ease, color 150ms ease, background-color 150ms ease;
-}
-
-.slot-btn:hover { border-color: var(--gold); color: var(--gold-soft); }
-
-.slot-btn.selected {
-  background: var(--gold);
-  border-color: var(--gold);
-  color: var(--bg);
-  font-weight: 600;
-}
-
-.slots-empty {
-  grid-column: 1 / -1;
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--ivory-muted);
-  text-align: center;
-  padding: 0.5rem 0;
-}
-
-.confirmation {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.6rem;
-  padding: 1.5rem 1rem;
-  text-align: center;
-  animation: confirmation-in 300ms ease;
+  gap: 0.9rem;
 }
 
-.confirmation[hidden] { display: none; }
-
-@keyframes confirmation-in {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: none; }
-}
-
-.confirmation-check {
-  width: 44px;
-  height: 44px;
-  color: #9fd8a0;
-}
-
-.confirmation-title {
+.section-title {
   margin: 0;
   font-family: 'Playfair Display', Georgia, serif;
-  font-size: 1.3rem;
+  font-weight: 600;
+  font-size: clamp(1.3rem, 5vw, 1.7rem);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
   color: var(--gold-soft);
 }
 
-.confirmation-details {
-  margin: 0.4rem 0 0;
+.section-sub {
+  margin: 0;
+  color: var(--ivory-muted);
+  font-size: 0.95rem;
+  letter-spacing: 0.03em;
+}
+
+.pros {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
   width: 100%;
-  max-width: 20rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-}
-
-.confirmation-details > div {
-  display: flex;
-  justify-content: space-between;
   gap: 1rem;
-  padding-bottom: 0.4rem;
-  border-bottom: 1px solid var(--border);
 }
 
-.confirmation-details dt {
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ivory-muted);
+.pro {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(244, 239, 228, 0.02);
 }
 
-.confirmation-details dd {
+.pro-head {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  text-align: left;
+}
+
+.pro-photo {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  background: rgba(200, 164, 76, 0.08);
+}
+
+.pro-photo--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.8rem;
+  color: var(--gold);
+}
+
+.pro-id { min-width: 0; }
+
+.pro-name {
   margin: 0;
-  font-size: 0.95rem;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.3rem;
+  letter-spacing: 0.04em;
   color: var(--ivory);
-  text-align: right;
 }
 
-.confirmation-note {
+.pro-tags {
   margin: 0.3rem 0 0;
-  font-size: 0.85rem;
+  font-size: 0.92rem;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
   color: var(--ivory-muted);
+}
+
+.pro-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0.8rem 1.25rem;
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, var(--gold-soft), var(--gold));
+  color: var(--bg);
+  text-decoration: none;
+  font-size: 0.92rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: center;
+  box-shadow: 0 8px 24px -12px rgba(200, 164, 76, 0.55);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pro-cta:active { transform: translateY(1px); }
+
+@media (hover: hover) {
+  .pro-cta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 28px -12px rgba(200, 164, 76, 0.7);
+  }
+}
+
+.booking-note {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--ivory-muted);
+  max-width: 24rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pro-cta { transition: none; }
+  .pro-cta:active { transform: none; }
 }

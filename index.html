@@ -39,74 +39,49 @@
     <p class="status-sub">Estamos preparando algo especial. Mientras tanto, compartí fotos o videos de tu trabajo con nosotras.</p>
   </section>
 
-  <section class="upload" id="booking">
-    <button class="btn-upload" id="bookingToggle" type="button" aria-expanded="false" aria-controls="bookingForm">
-      Reservar cita
-    </button>
-    <form class="upload-form" id="bookingForm" hidden novalidate>
-      <div class="field">
-        <label class="field-label">¿Qué querés reservar?</label>
-        <div class="category-tabs" id="categoryTabs" role="group">
-          <button type="button" class="category-tab" data-category="hair">Peluquería</button>
-          <button type="button" class="category-tab" data-category="nails">Uñas</button>
-          <button type="button" class="category-tab" data-category="both">Ambos</button>
+  <!--
+    Las tarjetas llevan a la página real de cada profesional en la app de
+    citas, que es donde viven sus servicios, precios y disponibilidad. A
+    propósito no se repiten precios acá: quedarían desactualizados el día que
+    ellas cambien uno, y este sitio no tiene forma de enterarse.
+  -->
+  <section class="booking" id="booking" aria-labelledby="bookingTitle">
+    <h2 class="section-title" id="bookingTitle">Reservá tu cita</h2>
+    <p class="section-sub">Elegí con quién querés atenderte.</p>
+
+    <ul class="pros">
+      <li class="pro">
+        <div class="pro-head">
+          <img class="pro-photo" data-initial="P"
+               src="https://media.glowstudios.vip/providers/3/avatar/01KZ9K72K79FVKPAKKQRS72YXW.webp"
+               alt="" width="72" height="72" loading="lazy" decoding="async">
+          <div class="pro-id">
+            <p class="pro-name">Patricia</p>
+            <p class="pro-tags">Color · Balayage · Cortes</p>
+          </div>
         </div>
-        <p class="field-hint" id="bothHint" hidden>Reservamos tu turno de uñas y coordinamos el de peluquería cuando te confirmemos por teléfono.</p>
-      </div>
+        <a class="pro-cta" href="https://citas.glowstudios.vip/p/pati">
+          Ver servicios y reservar
+        </a>
+      </li>
 
-      <div class="field" id="serviceField" hidden>
-        <label class="field-label" for="serviceSelect">Servicio</label>
-        <select class="select-input" id="serviceSelect" required>
-          <option value="" disabled selected>Elegí un servicio</option>
-        </select>
-      </div>
-
-      <div class="field" id="dateField" hidden>
-        <label class="field-label" for="dateInput">Día</label>
-        <input class="name-input" type="date" id="dateInput" required>
-      </div>
-
-      <div class="field" id="slotsField" hidden>
-        <label class="field-label">Hora</label>
-        <div class="slots-grid" id="slotsGrid"></div>
-      </div>
-
-      <div class="field">
-        <label class="field-label" for="bookingNameInput">Tu nombre</label>
-        <input class="name-input" type="text" id="bookingNameInput" placeholder="Ej: Ana" autocomplete="name" required>
-      </div>
-
-      <div class="field">
-        <label class="field-label" for="bookingPhoneInput">Tu teléfono</label>
-        <input class="name-input" type="tel" id="bookingPhoneInput" placeholder="404 555 0123" autocomplete="tel" required>
-      </div>
-
-      <button type="submit" class="btn-submit" id="bookingSubmitBtn" disabled>Confirmar cita</button>
-      <p class="upload-status" id="bookingStatus" role="status" aria-live="polite"></p>
-    </form>
-
-    <div class="confirmation" id="bookingConfirmation" hidden role="status" aria-live="polite">
-      <svg class="confirmation-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-        <circle cx="12" cy="12" r="10"/>
-        <path d="M7.5 12.5l3 3 6-6.5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      <p class="confirmation-title">¡Cita reservada!</p>
-      <dl class="confirmation-details">
-        <div>
-          <dt>Servicio</dt>
-          <dd id="confirmService"></dd>
+      <li class="pro">
+        <div class="pro-head">
+          <img class="pro-photo" data-initial="V"
+               src="https://media.glowstudios.vip/providers/5/avatar/01KZENPHWM9J6FKMN3ZVN4CH8A.webp"
+               alt="" width="72" height="72" loading="lazy" decoding="async">
+          <div class="pro-id">
+            <p class="pro-name">Vanessa</p>
+            <p class="pro-tags">Uñas · Manicure · Pedicure</p>
+          </div>
         </div>
-        <div>
-          <dt>Día</dt>
-          <dd id="confirmDay"></dd>
-        </div>
-        <div>
-          <dt>Hora</dt>
-          <dd id="confirmTime"></dd>
-        </div>
-      </dl>
-      <p class="confirmation-note">Te confirmamos por teléfono.</p>
-    </div>
+        <a class="pro-cta" href="https://citas.glowstudios.vip/p/vane">
+          Ver servicios y reservar
+        </a>
+      </li>
+    </ul>
+
+    <p class="booking-note">Vas a ver sus servicios, precios y horarios disponibles.</p>
   </section>
 
   <section class="upload" id="upload">
@@ -137,6 +112,7 @@
       </div>
 
       <button type="submit" class="btn-submit" id="submitBtn" disabled>Enviar</button>
+      <p class="upload-hint" id="uploadHint" aria-live="polite"></p>
       <p class="upload-status" id="uploadStatus" role="status" aria-live="polite"></p>
     </form>
   </section>
